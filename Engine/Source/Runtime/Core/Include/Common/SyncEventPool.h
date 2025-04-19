@@ -4,9 +4,13 @@
 #include "Common/PlatformProcess.h"
 #include "Container/AtomicMpMcQueue.h"
 
-class HSafeRecycleableSyncEvent final :public HSyncEvent
+/*
+ *A simple wrapper for the HSyncEvent class, which is used to recycle the event object.
+*/
+class HSafeRecycleableSyncEvent final : public HSyncEvent
 {
 public:
+
     HSyncEvent* InnnerEvent;
 
 	HSafeRecycleableSyncEvent(HSyncEvent* innerEvent)

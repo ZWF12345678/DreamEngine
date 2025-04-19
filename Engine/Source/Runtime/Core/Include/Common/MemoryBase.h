@@ -28,6 +28,7 @@ public:
 
 class HMallocator : public HSystemMemoryMallocator
 {
+
 public:
 
     virtual void* Malloc(SIZE_T Size, UInt32 Alignment = DEFAULT_ALIGMENT) = 0;

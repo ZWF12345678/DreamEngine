@@ -23,7 +23,12 @@ set(DE_RUNTIMECORE_INCLUDE_DIRS
     ${CMAKE_SOURCE_DIR}/Engine/Source/Runtime/Core/include
 )
 
+#set third party libraries path
+set(THIRD_PARTY_LIBS_DIR_ROOT ${CMAKE_SOURCE_DIR}/ThirdParty/Libs)
+set(THIRD_PARTY_INCLUDE_DIRS_ROOT ${CMAKE_SOURCE_DIR}/ThirdParty/Include)
+
 # add subdirectories
 add_subdirectory(Engine/Source/Runtime/Core)
+add_subdirectory(Test/Runtime)
 
 

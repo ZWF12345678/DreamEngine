@@ -1,5 +1,9 @@
 #pragma once
 
+#include <vector>
+#include <functional>
+#include <string>
+
 #if defined(__MINGW32__) || defined(__GNUC__)
 #pragma GCC target("waitpkg")
 #endif
@@ -14,11 +18,137 @@
 #include <immintrin.h>
 #endif
 
+#if PLATFORM_APPLE
+#include <mach/mach_time.h>
+#endif
+
+#if !defined(__clang__)
+#include <intrin.h>
+#if defined(_M_ARM)
+#include <armintr.h>
+#elif defined(_M_ARM64) || defined(_M_ARM64EC)
+#include <arm64intr.h>
+#endif
+#endif
 
 class HSyncEvent;
+struct SProcessHandle;
+
+/** Universal template for the process handle. */
+template< typename T, T InvalidHandleValue >
+struct TProcessHandle
+{
+	typedef T HandleType;
+public:
+
+	FORCEINLINE TProcessHandle()
+		: Handle( InvalidHandleValue )
+	{ }
+
+	FORCEINLINE explicit TProcessHandle( T Other )
+		: Handle( Other )
+	{ }
+
+	FORCEINLINE T Get() const
+	{
+		return Handle;
+	}
+
+	FORCEINLINE void Reset()
+	{
+		Handle = InvalidHandleValue;
+	}
+
+	FORCEINLINE bool IsValid() const
+	{
+		return Handle != InvalidHandleValue;
+	}
+
+protected:
+	
+	T Handle;
+};
+
 
 struct HUniversalPlatformProcess
 {
+
+	/**
+	 * Universal representation of a interprocess semaphore
+	 */
+	struct HProcessSemaphore
+	{
+		const ANSICHAR* GetName() const
+		{
+			return Name;
+		}
+
+		virtual void Lock() = 0;
+
+		virtual bool TryLock(UInt64 NanosecondsToWait) = 0;
+
+		virtual void Unlock() = 0;
+
+		HProcessSemaphore(const std::string& InName);
+
+		HProcessSemaphore(const ANSICHAR* InName);
+
+		virtual ~HProcessSemaphore() { };
+
+	protected:
+
+		enum Limits
+		{
+			MaxSemaphoreName = 128
+		};
+
+		ANSICHAR	Name[MaxSemaphoreName];
+	};
+
+#if PLATFORM_HAS_BSD_TIME 
+
+	static CORE_API void Sleep( float Seconds );
+
+	static CORE_API void SleepNoStats( float Seconds );
+
+	[[noreturn]] static CORE_API void SleepInfinite();
+
+	static CORE_API void YieldThread();
+
+#endif 
+
+	static CORE_API void SleepCondition(std::function<bool()> Condition, float SleepTime = 0.0f);
+
+	/*
+	 * Opens a process handle for the given process ID.
+	 * @param ProcessID The ID of the process to open.
+	 * @return A handle to the opened process, or an invalid handle if the operation failed.
+	 * @note This function is not thread-safe and should be used with caution.
+	*/
+	static CORE_API SProcessHandle OpenProcess(UInt32 ProcessID);
+
+	static CORE_API void CloseProcess( SProcessHandle & ProcessHandle );
+
+	static CORE_API bool ProcessIsRunning( SProcessHandle & ProcessHandle );
+
+	static CORE_API void WaitForProcess( SProcessHandle & ProcessHandle );
+
+	static CORE_API void TerminateProcess( SProcessHandle & ProcessHandle, bool KillTree = false );
+
+	static CORE_API void TerminateProcessTreeWithPredicate(SProcessHandle& ProcessHandle,std::function<bool(UInt32 ProcessId, const ANSICHAR* ApplicationName)> Predicate);
+
+	static CORE_API bool GetProcessReturnCode( SProcessHandle & ProcHandle, Int32& ReturnCode );
+
+	static CORE_API bool ApplicationIsRunning( UInt32 ProcessId );
+
+	static CORE_API std::string GetApplicationName( UInt32 ProcessId );
+
+	static CORE_API bool GetApplicationMemoryUsed(UInt32 ProcessId, SIZE_T& OutMemoryUsedSize);
+
+	static CORE_API bool ExecProcess(const ANSICHAR* URL, const ANSICHAR* Params, Int32& OutReturnCode, std::string& OutStdOut, std::string& OutStdErr, const ANSICHAR* OptionalWorkingDirectory = NULL, bool bShouldEndWithParentProcess = false);
+
+	static CORE_API bool ExecAdminProcess(const ANSICHAR* URL, const ANSICHAR* Params, Int32& OutReturnCode);
+
 	static CORE_API bool SupportsMultithreading();
 
 	static CORE_API class HRunnableThread* CreateRunnableThread();
@@ -37,7 +167,7 @@ struct HUniversalPlatformProcess
 
 	static CORE_API bool ShouldSaveToUserDir();
 
-	static CORE_API HSyncEvent* CreateSynchEvent(bool IsManualReset = false);
+	static CORE_API HSyncEvent* CreateSynchEvent(bool IsManualReset);
 
 	static CORE_API HSyncEvent* GetSynchEventFromPool(bool IsManualReset = false);
 
@@ -45,8 +175,31 @@ struct HUniversalPlatformProcess
 
 	static CORE_API void ReturnSynchEventToPool(HSyncEvent* InEvent);
 
+	static CORE_API void ClosePipe( void* ReadPipe, void* WritePipe );
 
-	static FORCEINLINE void YieldThread()
+	static CORE_API bool CreatePipe(void*& ReadPipe, void*& WritePipe, bool bWritePipeLocal = false);
+
+	// static CORE_API String ReadPipe( void* ReadPipe );
+
+	// static CORE_API bool WritePipe(void* WritePipe, const String& Message, String* OutWritten = nullptr);
+
+	static CORE_API bool ReadPipeToVector(void* ReadPipe, std::vector<UInt8> & Output);
+
+	static CORE_API bool WritePipe(void* WritePipe, const UInt8* Data, const Int32 DataLength, Int32* OutDataLength = nullptr);
+
+	/*
+	 *Creates or opens an interprocess synchronization object.
+	*/
+	static CORE_API HProcessSemaphore* 	CreateProcessSynchSemaphore(const std::string& Name, bool bCreate, UInt32 MaxLocks = 1);
+
+	static CORE_API HProcessSemaphore*  CreateProcessSynchSemaphore(const ANSICHAR* Name, bool bCreate, UInt32 MaxLocks = 1);
+
+	/*
+	 * Deletes an interprocess synchronization object.
+	 */
+	static CORE_API bool DeleteProcessSynchSemaphore(HProcessSemaphore* InSemaphore);
+
+	static FORCEINLINE void Yield()
 	{
 #if PLATFORM_USE_SSE2_FOR_THREAD_YIELD
 		_mm_pause();
@@ -57,6 +210,7 @@ struct HUniversalPlatformProcess
 #else
 		__builtin_arm_yield();
 #endif
+
 #endif
 	}
 
@@ -73,7 +227,7 @@ struct HUniversalPlatformProcess
 			return __builtin_readcyclecounter();
 #else
 	// the platform with other architectures must override this to not have this function be called
-	unimplemented();
+#	error Unsupported architecture!
 #endif
 		};
 
@@ -106,7 +260,7 @@ struct HUniversalPlatformProcess
 		// We can't read cycle counter from user mode on these platform
 		for (UInt64 i = 0; i < Cycles; i++)
 		{
-			YieldThread();
+			Yield();
 		}
 #endif
 	}

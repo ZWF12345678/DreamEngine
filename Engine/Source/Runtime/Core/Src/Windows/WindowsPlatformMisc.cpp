@@ -270,6 +270,27 @@ private:
 
 HCPUIDQueriedData HCPUIDQueriedData::CPUIDStaticCache;
 
+const ANSICHAR* HWindowsPlatformMisc::GetSystemErrorMessage(ANSICHAR* OutBuffer, Int32 BufferCount, Int32 Error)
+{
+	*OutBuffer = '\0';
+	if (Error == 0)
+	{
+		Error = GetLastError();
+	}
+	FormatMessage( FORMAT_MESSAGE_FROM_SYSTEM, NULL, Error, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), OutBuffer, BufferCount, NULL );
+	TCHAR* Found = strchr(OutBuffer,'\r');
+	if (Found)
+	{
+		*Found = '\0';
+	}
+	Found = strchr(OutBuffer,'\n');
+	if (Found)
+	{
+		*Found = '\0';
+	}
+	return OutBuffer;
+}
+
 bool HWindowsPlatformMisc::HasTimedPauseCPUFeature()
 {
 	return HCPUIDQueriedData::HasTimedPauseInstruction();

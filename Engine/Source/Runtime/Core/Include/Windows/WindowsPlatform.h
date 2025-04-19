@@ -1,8 +1,13 @@
 #pragma once
 
+/*
+ *This part is mainly for the special processing of the Windows platform, 
+ *including the specific compiler under the Windows platform, special data types, keywords, and the definition of platform support.
+*/
+
 #include "UniversalPlatform/UniversalPlatform.h"
 
-// #include <sal.h>
+#include <sal.h>
 
 //define the platform compiler
 /*Complier Clang Define*/

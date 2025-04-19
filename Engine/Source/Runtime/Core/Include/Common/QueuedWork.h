@@ -21,12 +21,10 @@ public:
 
 	virtual void DoThreadedWork() = 0;
 
-
 	virtual void Abandon() = 0;
 
-
 	virtual EQueuedWorkTags GetQueuedWorkFlags() const { return EQueuedWorkTags::None; }
-
+	
 public:
 
 	virtual ~HQueuedWork() {}

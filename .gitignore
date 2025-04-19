@@ -34,3 +34,6 @@
 #build
 /bin
 /build
+
+#Third party libraries
+/ThirdParty

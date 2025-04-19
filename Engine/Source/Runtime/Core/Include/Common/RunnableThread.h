@@ -10,6 +10,7 @@ class HRunnable;
 
 /*
  * An abstraction of a thread.
+ *Thread needs to be implemented according to different platforms.
  */
 
  class HRunnableThread
@@ -20,9 +21,14 @@ class HRunnable;
 	static CORE_API UInt32 RunnableTLSSlot;
 
 public:
-
+	/*
+	 *Assign a TLSSlot to each thread.
+	*/
 	static CORE_API UInt32 GetTLSSlot();
 
+	/*
+	 *To create a thread, you need to call the CreateInternal function.
+	*/
 	static CORE_API HRunnableThread* Create(
 		class HRunnable* InRunnable,
 		const ANSICHAR* ThreadName,
@@ -31,14 +37,30 @@ public:
 		UInt64 InThreadAffinityMask = HPlatformAffinity::GetNoAffinityMask(),
 		EThreadCreateFlags InCreateFlags = EThreadCreateFlags::None);
 
+	/*
+	 *Set the priority of the thread.
+	*/
 	virtual void SetThreadPriority(EThreadPriority NewPriority) = 0;
 
+	/*
+	 *Set the thread to suspend or resume.
+	*/
 	virtual void Suspend(bool bShouldPause = true) = 0;
 
+	/*
+	 *If bShouldWait is true, it will wait for the thread to exit before returning.
+	 *Kill the thread.
+	*/
 	virtual bool Kill(bool bShouldWait = true) = 0;
 
+	/*
+	 *Wait for the thread to finish executing.
+	*/
 	virtual void WaitForCompletion() = 0;
 
+	/*
+	 *Get the thread type.
+	*/
 	enum class ThreadType
 	{
 		Real,

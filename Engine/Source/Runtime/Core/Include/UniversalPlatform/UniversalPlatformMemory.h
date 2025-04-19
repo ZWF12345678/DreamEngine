@@ -93,8 +93,6 @@ struct HUniversalPlatformMemory
 	 */
     static CORE_API HMallocator* GetDefaultAllocator();
 
-
-
 };
 
 

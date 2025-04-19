@@ -1,5 +1,9 @@
 #pragma once
 
+/*
+ *This part is mainly about the early definition of different platforms, as well as testing the size of platform data types.
+*/
+
 #include "Common/PreProcessHelper.h"
 
 //OS platform defines
@@ -65,6 +69,8 @@
 // Base Data Type Definition
 typedef HPlatformDataType::UInt8 			UInt8;
 
+typedef HPlatformDataType::UInt8			Byte;
+
 typedef HPlatformDataType::UInt16			UInt16;
 
 typedef HPlatformDataType::UInt32			UInt32;
@@ -105,7 +111,6 @@ typedef HPlatformDataType::UPTRINT          UPTRINT;
 
 typedef HPlatformDataType::SPTRINT          SPTRINT;
 
-using Byte = UInt8;
 
 namespace TypesTest
 {

@@ -1,17 +1,24 @@
 #pragma once
 
+/*
+ *This section defines some common platform data types, including shape types, floating-point types, character types, and pointer sizes.
+*/
+
+//Help us to automatically determine the pointer size.
 template<typename PtrSize32, typename PtrSize64, int PtrSize3>
 struct TPointerSizeHelper
 {
 
 };
 
+//It will be selected when the platform pointer is 8 bytes
 template<typename PtrSize32, typename PtrSize64>
 struct TPointerSizeHelper<PtrSize32, PtrSize64, 8>
 {
 	typedef PtrSize64 PointerSizeType;
 };
 
+//It will be selected when the platform pointer is 4 bytes
 template<typename PtrSize32, typename PtrSize64>
 struct TPointerSizeHelper<PtrSize32, PtrSize64, 4>
 {
@@ -37,9 +44,9 @@ struct HUniversalPlatformDataType
 
 	typedef signed long long			Int64;
 
-	typedef char						ANSICHAR; //It is a fixed 8 bytes in memory, independent of different platforms.
+	typedef char						ANSICHAR; 		//It is a fixed 8 bytes in memory, independent of different platforms.
 
-	typedef wchar_t						WIDECHAR; //The number of bits in memory depends on the different platforms.
+	typedef wchar_t						WIDECHAR; 		//The number of bits in memory depends on the different platforms(e.g It occupies 2 bytes under the Windows platform and 4 bytes under the Linux platform.).
 
 	typedef UInt8						UTF8CHAR;
 
